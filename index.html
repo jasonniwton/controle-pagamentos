@@ -31,6 +31,8 @@ main{max-width:1150px;margin:0 auto;padding:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .card .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
 .card .val{font-size:20px;font-weight:700;margin-top:5px;font-variant-numeric:tabular-nums}
+#kEntSub{display:grid;grid-template-columns:auto auto;justify-content:space-between;gap:1px 8px;font-variant-numeric:tabular-nums}
+#kEntSub span:nth-child(even){text-align:right}
 .card .sub{font-size:11px;color:var(--muted);margin-top:3px}
 .pos{color:var(--green)}.neg{color:var(--red)}.amb{color:var(--amber)}
 .cols{display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start}
@@ -310,7 +312,7 @@ function render(){
   const d=mesAtual(), r=resumo(d)||resumo(novoMes());
   $('#vazio').classList.toggle('hide',!!d);$('#corpo').classList.toggle('hide',!d);
   $('#vazioTit').textContent=`${MESES[mes-1]} de ${ano} ainda não tem lançamentos`;
-  setVal('#kEnt',r.ent);$('#kEntSub').textContent=`Jason ${brl(r.jason)} · David ${brl(r.david)}`;
+  setVal('#kEnt',r.ent);$('#kEntSub').innerHTML=`<span>Jason</span><span>${brl(r.jason)}</span><span>David</span><span>${brl(r.david)}</span>`+(r.outras?`<span>Outras entradas</span><span>${brl(r.outras)}</span>`:'');
   setVal('#kDesp',r.total);$('#kDespSub').textContent=`${r.desp.length} contas`;
   setVal('#kPago',r.pago);setVal('#kAPagar',r.apagar);
   $('#kAPagarSub').textContent=`${r.desp.filter(x=>x.status!=='pago').length} contas pendentes`;
