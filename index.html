@@ -83,6 +83,32 @@ tr.click{cursor:pointer}tr.click:hover td{background:#f8f9fb}
 #login h2{margin:0 0 4px;font-size:19px}#login p{margin:0 0 16px;color:var(--muted);font-size:13px}
 #loginErro{color:var(--red);font-size:13px;min-height:18px;margin-top:8px}
 .sair{background:rgba(255,255,255,.12);border:0;color:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font:inherit;font-size:12px;margin-left:8px}
+.etot{font-size:18px;color:var(--green);font-variant-numeric:tabular-nums}
+.pessoa{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:#fcfcfd}
+.ph{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.av{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff}
+.avj{background:#1f5fbf}.avd{background:#7a4cc2}
+.tag{font-size:11px;background:var(--blue-bg);color:var(--blue);padding:1px 7px;border-radius:999px}
+.pv{margin-left:auto;font-weight:700;font-size:16px;font-variant-numeric:tabular-nums;color:var(--green)}
+.money{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden}
+.money:focus-within{outline:2px solid var(--blue);outline-offset:-1px}
+.money span{padding:0 0 0 10px;color:var(--muted);font-size:13px}
+.money input{border:0;background:transparent;outline:none!important}
+.parc{font-size:12px;color:var(--muted);margin-top:6px;min-height:0}
+.seglbl{font-size:11px;color:var(--muted);margin:10px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{flex:1;border:0;border-right:1px solid var(--line);background:#fff;padding:7px 0;font:inherit;font-size:13px;cursor:pointer;color:var(--muted)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--navy);color:#fff;font-weight:600}
+.seg button:disabled{cursor:not-allowed}
+.brk{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:12.5px;margin-top:10px;font-variant-numeric:tabular-nums}
+.brk span:nth-child(even){text-align:right}
+.brk .l{border-top:1px dashed var(--line);padding-top:4px;font-weight:700}
+.dezt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);margin-top:14px}
+.dez{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.dez div{background:#f4f6f9;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.dez span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;font-weight:600}
+.dez b{font-variant-numeric:tabular-nums}
 @media(max-width:900px){main{padding:10px}.panel{padding:12px}td,th{padding:7px 4px}.cols{grid-template-columns:1fr!important}.hrow h1{font-size:16px}.cards{grid-template-columns:repeat(2,1fr)}.card .val{font-size:17px}.hidem{display:none}}
 </style>
 </head>
@@ -115,19 +141,27 @@ tr.click{cursor:pointer}tr.click:hover td{background:#f8f9fb}
     <div class="cols" id="corpo">
       <div>
         <section class="panel">
-          <h2>Entradas</h2>
-          <div class="f"><label>Entrada Jason</label><input id="eJason" placeholder="Ex.: 500+5948,58"><div class="calc" id="eJasonC"></div></div>
-          <div class="f"><label>Entrada David — valor total do app 99</label>
-            <div class="inl"><input id="eDavid" placeholder="0,00"><span class="help" style="white-space:nowrap">desconto</span>
-              <select id="eDesc" style="width:86px"><option value="0">0%</option><option value="10">10%</option><option value="20">20%</option><option value="30">30%</option><option value="40">40%</option></select></div>
-            <div class="calc" id="eDavidC"></div></div>
+          <h2><span>Entradas</span><span class="etot" id="eTot">R$ 0,00</span></h2>
+          <div class="pessoa">
+            <div class="ph"><span class="av avj">J</span><b>Jason</b><span class="pv" id="eJasonV">—</span></div>
+            <div class="money"><span>R$</span><input id="eJason" inputmode="decimal" placeholder="Ex.: 500+5948,58"></div>
+            <div class="parc" id="eJasonC"></div>
+          </div>
+          <div class="pessoa">
+            <div class="ph"><span class="av avd">D</span><b>David</b><span class="tag">app 99</span><span class="pv" id="eDavidV">—</span></div>
+            <div class="money"><span>R$</span><input id="eDavid" inputmode="decimal" placeholder="Valor total do app"></div>
+            <div class="seglbl">Desconto do app</div>
+            <div class="seg" id="eDescSeg"><button data-d="0">0%</button><button data-d="10">10%</button><button data-d="20">20%</button><button data-d="30">30%</button><button data-d="40">40%</button></div>
+            <div class="brk" id="eDavidC"></div>
+          </div>
           <div id="outrasBox"></div>
           <button class="btn sm" id="btnOutra">+ Outra entrada</button>
-          <div class="mini" style="margin-top:12px">
-            <span>10% Jason</span><span id="d10J">—</span>
-            <span>10% David</span><span id="d10D">—</span>
+          <div class="dezt">Valor dízimo do mês</div>
+          <div class="dez">
+            <div><span>Jason</span><b id="d10J">—</b></div>
+            <div><span>David</span><b id="d10D">—</b></div>
           </div>
-          <p class="help" style="margin:8px 0 0">Dica: os campos aceitam somas, como na planilha (ex.: <b>141,97+479,51</b>).</p>
+          <p class="help" style="margin:10px 0 0">Os campos aceitam somas, como na planilha (ex.: <b>141,97+479,51</b>).</p>
         </section>
         <section class="panel">
           <h2>Espelho deste mês</h2>
@@ -271,13 +305,19 @@ function render(){
   if(!d) return;
   // entradas (não sobrescreve campo em edição)
   const setIn=(id,v)=>{if(document.activeElement!==$(id))$(id).value=v??'';};
-  setIn('#eJason',d.jason);setIn('#eDavid',d.davidBruto);$('#eDesc').value=String(d.davidDesc??20);
-  $('#eJasonC').textContent=d.jason?(isNaN(calc(d.jason))?'⚠ valor inválido':'= '+brl(r.jason)):'';
-  $('#eDavidC').textContent=d.davidBruto?(isNaN(calc(d.davidBruto))?'⚠ valor inválido':`${brl(r.bruto)} − ${r.desc}% = ${brl(r.david)}`):'';
+  setIn('#eJason',d.jason);setIn('#eDavid',d.davidBruto);
+  const parcelas=ex=>{const p=String(ex||'').replace(/^=/,'').split('+').map(x=>calc(x));return p.length>1&&p.every(v=>!isNaN(v))?p.map(brl).join(' + '):'';};
+  const invJ=d.jason&&isNaN(calc(d.jason)), invD=d.davidBruto&&isNaN(calc(d.davidBruto));
+  $('#eTot').textContent=brl(r.ent);
+  $('#eJasonV').textContent=invJ?'⚠':brl(r.jason);
+  $('#eJasonC').innerHTML=invJ?'<span class="neg">⚠ valor inválido</span>':esc(parcelas(d.jason));
+  $('#eDavidV').textContent=invD?'⚠':brl(r.david);
+  $('#eDescSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.d===r.desc));
+  $('#eDavidC').innerHTML=invD?'<span class="neg">⚠ valor inválido</span>':(d.davidBruto?`<span>Valor do app</span><span>${brl(r.bruto)}</span><span>Desconto (${r.desc}%)</span><span class="neg">− ${brl(r.bruto-r.david)}</span><span class="l">Líquido</span><span class="l pos">${brl(r.david)}</span>`:'');
   $('#d10J').textContent=brl(r.dez.j);$('#d10D').textContent=brl(r.dez.d);
   const ob=$('#outrasBox');
   if(!ob.contains(document.activeElement))
-    ob.innerHTML=(d.outras||[]).map(o=>`<div class="f"><div class="inl"><input data-o="${o.id}" data-k="desc" value="${esc(o.desc)}" placeholder="Descrição"><input data-o="${o.id}" data-k="valor" value="${esc(o.valor)}" placeholder="Valor" style="width:120px"><button class="btn ghost sm" data-del="${o.id}" title="Remover">✕</button></div></div>`).join('');
+    ob.innerHTML=(d.outras||[]).map(o=>`<div class="pessoa"><div class="ph"><span class="av" style="background:#178a4c">+</span><b>Outra entrada</b><span class="pv">${isNaN(calc(o.valor))?'⚠':brl(calc(o.valor)||0)}</span><button class="btn ghost sm" data-del="${o.id}" title="Remover">✕</button></div><div class="inl"><input data-o="${o.id}" data-k="desc" value="${esc(o.desc)}" placeholder="Descrição"><div class="money" style="width:150px;flex:none"><span>R$</span><input data-o="${o.id}" data-k="valor" value="${esc(o.valor)}" placeholder="0,00"></div></div></div>`).join('');
   // despesas
   const linhas=r.desp.map((x,i)=>{
     const atraso=x.status!=='pago'&&x.venc&&x.venc<hojeISO;
@@ -297,7 +337,7 @@ function render(){
 // eventos das entradas (salva ao sair do campo)
 $('#eJason').onchange=e=>editarMes(d=>d.jason=e.target.value.trim());
 $('#eDavid').onchange=e=>editarMes(d=>d.davidBruto=e.target.value.trim());
-$('#eDesc').onchange=e=>editarMes(d=>d.davidDesc=+e.target.value);
+$('#eDescSeg').onclick=e=>{const b=e.target.closest('[data-d]');if(!b||b.disabled)return;editarMes(d=>d.davidDesc=+b.dataset.d);};
 $('#btnOutra').onclick=()=>editarMes(d=>{(d.outras??=[]).push({id:uid(),desc:'',valor:''});}).then(()=>{});
 $('#outrasBox').addEventListener('change',e=>{const o=e.target.dataset.o;if(!o)return;editarMes(d=>{const x=d.outras.find(y=>y.id===o);if(x)x[e.target.dataset.k]=e.target.value.trim();});});
 $('#outrasBox').addEventListener('click',e=>{const id=e.target.dataset.del;if(!id)return;editarMes(d=>d.outras=d.outras.filter(o=>o.id!==id));});
@@ -395,7 +435,7 @@ $('#btnPdfMes').onclick=()=>{
   doc.autoTable({startY:54,head:[['Entradas','Detalhe','Valor']],body:ent,foot:[['Total de entradas','',brl(r.ent)]],theme:'grid',
     styles:{fontSize:9},headStyles:{fillColor:[23,138,76]},footStyles:{fillColor:[232,246,238],textColor:20},columnStyles:{2:{halign:'right',cellWidth:35}},
     didParseCell:c=>{if(c.column.index===2)c.cell.styles.halign='right';},margin:{left:14,right:14}});
-  let y=doc.lastAutoTable.finalY+4;doc.setFontSize(8.5);doc.setTextColor(90);doc.text(`10% Jason: ${brl(r.dez.j)}    ·    10% David: ${brl(r.dez.d)}`,14,y+2);
+  let y=doc.lastAutoTable.finalY+4;doc.setFontSize(8.5);doc.setTextColor(90);doc.text(`Valor dízimo do mês — Jason: ${brl(r.dez.j)}    ·    David: ${brl(r.dez.d)}`,14,y+2);
   doc.autoTable({startY:y+7,head:[['Despesas','Tipo','De quem','Vencimento','Valor','Status']],
     body:r.desp.map(x=>[x.desc,x.cat||'',x.resp||'',brDate(x.venc),brl(x.v),x.status==='pago'?'PAGO':'A PAGAR']),
     foot:[['Total de despesas','','','',brl(r.total),'']],theme:'striped',styles:{fontSize:9},headStyles:{fillColor:[20,50,79]},footStyles:{fillColor:[240,242,245],textColor:20},
@@ -430,7 +470,7 @@ function excel(){
     res.push([nm,r.jason,r.bruto,r.desc/100,r.david,r.outras,r.ent,r.total,r.pago,r.apagar,r.saldo]);
     const rows=[['ENTRADAS TOTAL',r.ent],['ENTRADA JASON',r.jason],['ENTRADA DAVID (app 99)',r.bruto],['DESCONTO',r.desc/100],['ENTRADA DAVID LÍQUIDA',r.david],
       ...(d.outras||[]).map(o=>[String(o.desc||'OUTRA ENTRADA').toUpperCase(),calc(o.valor)||0]),
-      ['10% JASON',r.dez.j],['10% DAVID',r.dez.d],['DESPESAS TOTAIS',r.total],['PAGO',r.pago],['A PAGAR',r.apagar],['SALDO',r.saldo],[],
+      ['DÍZIMO JASON',r.dez.j],['DÍZIMO DAVID',r.dez.d],['DESPESAS TOTAIS',r.total],['PAGO',r.pago],['A PAGAR',r.apagar],['SALDO',r.saldo],[],
       ['DISCRIMINAÇÃO','VENCIMENTO','VALOR','STATUS','TIPO','DE QUEM'],...r.desp.map(x=>[x.desc,brDate(x.venc),x.v,x.status==='pago'?'PAGO':'A PAGAR',x.cat,x.resp])];
     const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:26},{wch:14},{wch:12},{wch:10},{wch:18},{wch:9}];XLSX.utils.book_append_sheet(wb,ws,nm.toUpperCase());});
   const wr=XLSX.utils.aoa_to_sheet(res);wr['!cols']=res[0].map(()=>({wch:15}));XLSX.utils.book_append_sheet(wb,wr,'RESUMO '+ano);
