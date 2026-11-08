@@ -106,6 +106,14 @@ tr.click{cursor:pointer}tr.click:hover td{background:#f8f9fb}
 .brk{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:12.5px;margin-top:10px;font-variant-numeric:tabular-nums}
 .brk span:nth-child(even){text-align:right}
 .brk .l{border-top:1px dashed var(--line);padding-top:4px;font-weight:700}
+.outras{border:1px dashed #b9c2cf;border-radius:10px;padding:12px;margin-bottom:6px}
+.orow{display:flex;gap:6px;align-items:center;margin-top:8px}
+.orow>input{flex:1;min-width:0}
+.orow .money{width:112px;flex:none}
+.odel{flex:none;width:34px;height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.odel:hover{background:var(--red-bg);color:var(--red);border-color:#f0c4c0}
+.addout{margin-top:10px;width:100%;border-style:dashed;color:var(--green);border-color:#9fd3b5}
+.addout:hover{background:var(--green-bg)}
 .dezt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);margin-top:14px}
 .dez{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
 .dez div{background:#f4f6f9;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
@@ -156,8 +164,11 @@ tr.click{cursor:pointer}tr.click:hover td{background:#f8f9fb}
             <div class="seg" id="eDescSeg"><button data-d="0">0%</button><button data-d="10">10%</button><button data-d="20">20%</button><button data-d="30">30%</button><button data-d="40">40%</button></div>
             <div class="brk" id="eDavidC"></div>
           </div>
-          <div id="outrasBox"></div>
-          <button class="btn sm" id="btnOutra">+ Outra entrada</button>
+          <div class="outras">
+            <div class="ph"><span class="av" style="background:#178a4c">+</span><span class="nm"><b>Outras entradas</b><small id="outQtd">Nenhuma neste mês</small></span><span class="pv" id="outTot"></span></div>
+            <div id="outrasBox"></div>
+            <button class="btn sm addout" id="btnOutra">+ Adicionar entrada</button>
+          </div>
           <div class="dezt">Valor dízimo do mês</div>
           <div class="dez">
             <div><span>Jason</span><b id="d10J">—</b></div>
@@ -317,9 +328,16 @@ function render(){
   $('#eDescSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.d===r.desc));
   $('#eDavidC').innerHTML=invD?'<span class="neg">⚠ valor inválido</span>':(d.davidBruto?`<span>Valor do app</span><span>${brl(r.bruto)}</span><span>Desconto (${r.desc}%)</span><span class="neg">− ${brl(r.bruto-r.david)}</span><span class="l">Líquido</span><span class="l pos">${brl(r.david)}</span>`:'');
   $('#d10J').textContent=brl(r.dez.j);$('#d10D').textContent=brl(r.dez.d);
-  const ob=$('#outrasBox');
-  if(!ob.contains(document.activeElement))
-    ob.innerHTML=(d.outras||[]).map(o=>`<div class="pessoa"><div class="ph"><span class="av" style="background:#178a4c">+</span><b>Outra entrada</b><span class="pv">${isNaN(calc(o.valor))?'⚠':brl(calc(o.valor)||0)}</span><button class="btn ghost sm" data-del="${o.id}" title="Remover">✕</button></div><div class="inl"><input data-o="${o.id}" data-k="desc" value="${esc(o.desc)}" placeholder="Descrição"><div class="money" style="width:150px;flex:none"><span>R$</span><input data-o="${o.id}" data-k="valor" value="${esc(o.valor)}" placeholder="0,00"></div></div></div>`).join('');
+  const ob=$('#outrasBox'), outs=d.outras||[], sig=outs.map(o=>o.id).join(',');
+  const LIXO='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>';
+  if(ob.dataset.sig===sig){
+    ob.querySelectorAll('input[data-o]').forEach(el=>{if(el===document.activeElement)return;const o=outs.find(x=>x.id===el.dataset.o);if(o&&el.value!==(o[el.dataset.k]||''))el.value=o[el.dataset.k]||'';});
+  }else{
+    ob.dataset.sig=sig;
+    ob.innerHTML=outs.map(o=>`<div class="orow"><input data-o="${o.id}" data-k="desc" value="${esc(o.desc)}" placeholder="Descrição"><div class="money"><span>R$</span><input data-o="${o.id}" data-k="valor" inputmode="decimal" value="${esc(o.valor)}" placeholder="0,00"></div><button class="odel" data-del="${o.id}" title="Excluir esta entrada">${LIXO}</button></div>`).join('');
+  }
+  $('#outQtd').textContent=outs.length?(outs.length===1?'1 entrada':outs.length+' entradas'):'Nenhuma neste mês';
+  $('#outTot').textContent=outs.length?brl(r.outras):'';
   // despesas
   const linhas=r.desp.map((x,i)=>{
     const atraso=x.status!=='pago'&&x.venc&&x.venc<hojeISO;
@@ -340,9 +358,13 @@ function render(){
 $('#eJason').onchange=e=>editarMes(d=>d.jason=e.target.value.trim());
 $('#eDavid').onchange=e=>editarMes(d=>d.davidBruto=e.target.value.trim());
 $('#eDescSeg').onclick=e=>{const b=e.target.closest('[data-d]');if(!b||b.disabled)return;editarMes(d=>d.davidDesc=+b.dataset.d);};
-$('#btnOutra').onclick=()=>editarMes(d=>{(d.outras??=[]).push({id:uid(),desc:'',valor:''});}).then(()=>{});
+$('#btnOutra').onclick=()=>{const id=uid();editarMes(d=>{(d.outras??=[]).push({id,desc:'',valor:''});});setTimeout(()=>{const el=document.querySelector(`[data-o="${id}"][data-k="desc"]`);if(el)el.focus();},50);};
 $('#outrasBox').addEventListener('change',e=>{const o=e.target.dataset.o;if(!o)return;editarMes(d=>{const x=d.outras.find(y=>y.id===o);if(x)x[e.target.dataset.k]=e.target.value.trim();});});
-$('#outrasBox').addEventListener('click',e=>{const id=e.target.dataset.del;if(!id)return;editarMes(d=>d.outras=d.outras.filter(o=>o.id!==id));});
+$('#outrasBox').addEventListener('click',async e=>{const b=e.target.closest('[data-del]');if(!b||b.disabled)return;const id=b.dataset.del;
+  const o=(mesAtual()?.outras||[]).find(x=>x.id===id);if(!o)return;
+  if((o.desc||o.valor)&&!await confirmar(`Excluir a entrada "${o.desc||'sem descrição'}" (${brl(calc(o.valor)||0)})?`))return;
+  if(document.activeElement)document.activeElement.blur();
+  editarMes(d=>d.outras=d.outras.filter(x=>x.id!==id));});
 $('#btnZero').onclick=()=>salvarMes(chave(ano,mes),novoMes());
 $('#btnCopiar').onclick=()=>{
   let a=ano,m=mes-1;if(m<1){m=12;a--;}
