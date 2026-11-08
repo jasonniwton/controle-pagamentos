@@ -1,12 +1,7 @@
 // ============================================================
-//  CONFIGURAÇÃO — cole aqui os dados do seu projeto Supabase
-//  (Supabase > Project Settings > API Keys / Data API)
+//  CONFIGURAÇÃO — dados do projeto Supabase
 // ============================================================
 window.CONFIG = {
-  // Ex.: "https://abcdefghijk.supabase.co"
-  SUPABASE_URL: "COLE_AQUI_O_PROJECT_URL",
-
-  // A chave "publishable" (começa com sb_publishable_...) ou a "anon public".
-  // NUNCA cole aqui a chave "secret" ou "service_role".
-  SUPABASE_KEY: "COLE_AQUI_A_CHAVE_PUBLISHABLE"
+  SUPABASE_URL: "https://wquzujnqpczcxbkzdomt.supabase.co",
+  SUPABASE_KEY: "sb_publishable_pZa_N96fbzuq__rVLa8rfQ_Id7_wZxS"
 };
