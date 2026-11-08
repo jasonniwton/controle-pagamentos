@@ -35,6 +35,30 @@ main{max-width:1150px;margin:0 auto;padding:16px}
 #kEntSub span:nth-child(even){text-align:right}
 .card .sub{font-size:11px;color:var(--muted);margin-top:3px}
 .pos{color:var(--green)}
+:root{--c-ent:#1f8a70;--c-desp:#c2372f}
+.leg{font-size:12px;font-weight:500;color:var(--muted);display:flex;align-items:center;gap:6px}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-left:8px}
+.graf{position:relative}
+.graf svg{width:100%;height:auto;display:block}
+.graf text{font-family:Inter,sans-serif;font-size:11px;fill:#6b7684}
+.tip{position:absolute;pointer-events:none;background:#14324f;color:#fff;border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.5;white-space:nowrap;transform:translate(-50%,-100%);opacity:0;transition:opacity .1s;z-index:5}
+.tip b{font-weight:600}
+.hb{display:grid;grid-template-columns:70px 1fr auto;gap:6px 8px;align-items:center;font-size:12.5px;font-variant-numeric:tabular-nums}
+.hb .tr{height:12px;background:#eef0f3;border-radius:4px;overflow:hidden}
+.hb .tr i{display:block;height:100%;border-radius:0 4px 4px 0}
+.comp{font-size:12.5px;margin:8px 0 12px;color:var(--muted)}
+.catl{display:grid;grid-template-columns:1fr auto auto;gap:5px 10px;font-size:12.5px;font-variant-numeric:tabular-nums;align-items:center}
+.up{color:var(--red);font-size:11.5px}.down{color:var(--green);font-size:11.5px}.eq{color:var(--muted);font-size:11.5px}
+.dica{background:#fff8e6;border:1px solid #f3dfa6;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.5;margin-top:12px;color:#5c4400}
+.dica b{color:#3d2e00}
+.dk{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.dk>div{border:1px solid var(--line);border-radius:10px;padding:14px}
+.dk h3{margin:0 0 2px;font-size:14px;display:flex;justify-content:space-between;gap:6px}
+.dk .meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.dk p{font-size:12.5px;line-height:1.5;margin:0 0 8px}
+.dk .eco{font-size:12.5px;background:var(--green-bg);color:#0f5c33;border-radius:6px;padding:6px 8px}
+.resumo-geral{font-size:13.5px;line-height:1.6;margin:0 0 14px}
+@media(max-width:900px){.dk{grid-template-columns:1fr}.graf text{font-size:19px}.leg{font-size:12px!important}}
 .showm{display:none}td.ed{font-size:12px;color:var(--muted);white-space:nowrap}.neg{color:var(--red)}.amb{color:var(--amber)}
 .cols{display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start}
 .cols>*{min-width:0}
@@ -180,6 +204,10 @@ tr.click{cursor:pointer}tr.click:hover td{background:#f8f9fb}
           <p class="help" style="margin:10px 0 0">Os campos aceitam somas, como na planilha (ex.: <b>141,97+479,51</b>).</p>
         </section>
         <section class="panel">
+          <h2>Análise do mês</h2>
+          <div id="anaMes"></div>
+        </section>
+        <section class="panel">
           <h2>Espelho deste mês</h2>
           <div class="row"><button class="btn pri" id="btnPdfMes">⬇ PDF para imprimir</button><button class="btn" id="btnXlsx">⬇ Excel do ano</button></div>
         </section>
@@ -205,6 +233,14 @@ tr.click{cursor:pointer}tr.click:hover td{background:#f8f9fb}
     <section class="panel">
       <h2><span>Mês a mês</span><span class="row"><button class="btn pri sm" id="btnPdfAno">⬇ Espelho anual (PDF)</button><button class="btn sm" id="btnXlsx2">⬇ Excel</button></span></h2>
       <div class="tablewrap"><table id="tAno"></table></div>
+    </section>
+    <section class="panel">
+      <h2><span>Entradas × Despesas por mês</span><span class="leg"><i style="background:var(--c-ent)"></i>Entradas <i style="background:var(--c-desp)"></i>Despesas</span></h2>
+      <div id="gAno" class="graf"></div>
+    </section>
+    <section class="panel">
+      <h2>Onde economizar</h2>
+      <div id="dicasAno"></div>
     </section>
     <div class="cols" style="grid-template-columns:1fr 1fr">
       <section class="panel"><h2>Por tipo de conta</h2><table id="tCat"></table></section>
@@ -264,7 +300,8 @@ function quemEditou(x){
 let sb=null,logado=false,podeEscrever=true;
 let docs={};               // 'AAAA-MM' -> dados
 const hoje=new Date();
-let ano=hoje.getFullYear(), mes=hoje.getMonth()+1, aba='mes';
+function mesInicial(){const h=new Date();let a=h.getFullYear(),m=h.getMonth()+2;if(m>12){m=1;a++;}return [a,m];}
+let [ano,mes]=mesInicial(), aba='mes';
 const chave=(a,m)=>a+'-'+pad(m);
 
 // ===== cálculos =====
@@ -329,6 +366,7 @@ function render(){
   setVal('#kPago',r.pago);setVal('#kAPagar',r.apagar);
   $('#kAPagarSub').textContent=`${r.desp.filter(x=>x.status!=='pago').length} contas pendentes`;
   setVal('#kSaldo',r.saldo,r.saldo>=0?'pos':'neg');$('#kSaldoSub').textContent=`Previsto após pagar tudo: ${brl(r.previsto)}`;
+  renderAnaliseMes(d?r:null);
   if(!d) return;
   // entradas (não sobrescreve campo em edição)
   const setIn=(id,v)=>{if(document.activeElement!==$(id))$(id).value=v??'';};
@@ -428,11 +466,100 @@ function abrirDespesa(i){
   setTimeout(()=>$('#dDesc').focus(),50);
 }
 
+// ===== análise e economia =====
+const DICAS={
+ 'Cartão de crédito':'Revise a fatura item a item: assinaturas esquecidas, compras parceladas e tarifas. Defina um teto mensal por cartão e evite parcelar compras pequenas.',
+ 'Veículo':'Cote o seguro com outras seguradoras na renovação, pague IPVA e licenciamento à vista quando houver desconto, evite multas e avalie antecipar parcelas para reduzir juros.',
+ 'Energia':'Confira a bandeira tarifária na conta, use lâmpadas LED, tire aparelhos da tomada em stand-by e reduza o tempo do chuveiro elétrico na posição mais quente.',
+ 'Água':'Teste vazamentos (feche tudo e veja se o hidrômetro continua girando), reduza o tempo de banho e reaproveite a água da máquina de lavar.',
+ 'Telefone':'Há mais de um plano de celular: compare preços e veja se um plano família ou um plano mais simples atende os dois.',
+ 'Internet':'Verifique se há duas internets pagas ao mesmo tempo e renegocie com a operadora ou troque por um plano mais barato.',
+ 'Aluguel':'É custo fixo: a melhor chance de economia é renegociar o valor na renovação do contrato.',
+ 'Impostos':'Pague à vista quando houver desconto e confira as deduções possíveis no Imposto de Renda.',
+ 'Educação':'É investimento: mantenha, mas procure pagamento anual com desconto ou bolsas.',
+ 'Saúde':'Compare preços de remédios entre farmácias e verifique genéricos.',
+ 'Mercado':'Faça lista de compras, compare preços e prefira compras do mês em atacarejo.',
+ 'Outros':'Classifique essas contas em um tipo específico para ver melhor onde o dinheiro está indo.'};
+const ESSENCIAL=new Set(['INSS']);
+function porCat(r){const g={};(r?r.desp:[]).forEach(x=>{const k=x.cat||'Outros';g[k]=(g[k]||0)+x.v;});return g;}
+function mesAnterior(a,m){m--;if(m<1){m=12;a--;}return [a,m];}
+function renderAnaliseMes(r){
+  const el=$('#anaMes');
+  if(!r||(!r.ent&&!r.total)){el.innerHTML='<p class="help">Lance entradas e despesas para ver a análise.</p>';return;}
+  const max=Math.max(r.ent,r.total,1), pct=r.ent?Math.round(r.total/r.ent*100):null;
+  let h=`<div class="hb"><span>Entradas</span><span class="tr"><i style="width:${r.ent/max*100}%;background:var(--c-ent)"></i></span><b>${brl(r.ent)}</b>
+    <span>Despesas</span><span class="tr"><i style="width:${r.total/max*100}%;background:var(--c-desp)"></i></span><b>${brl(r.total)}</b></div>
+    <div class="comp">${pct===null?'Sem entradas lançadas neste mês.':pct<=100?`As despesas usam <b>${pct}%</b> das entradas. Sobram <b class="pos">${brl(r.ent-r.total)}</b>.`:`As despesas passam as entradas em <b class="neg">${brl(r.total-r.ent)}</b> (${pct}% das entradas).`}</div>`;
+  const [pa,pm]=mesAnterior(ano,mes), rp=resumo(docs[chave(pa,pm)]);
+  const atual=porCat(r), ant=porCat(rp);
+  const lista=Object.entries(atual).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  h+=`<div class="catl">`+lista.map(([k,v])=>{let d='';
+    if(rp){const dv=v-(ant[k]||0);d=Math.abs(dv)<1?'<span class="eq">= igual</span>':dv>0?`<span class="up">▲ ${brl(dv)}</span>`:`<span class="down">▼ ${brl(-dv)}</span>`;}
+    return `<span>${esc(k)}</span><b>${brl(v)}</b>${d||'<span></span>'}`;}).join('')+`</div>`;
+  if(rp) h+=`<div class="help" style="margin-top:4px">▲▼ comparado com ${MESES[pm-1].toLowerCase()}/${pa}</div>`;
+  // dica: maior aumento relevante, senão maior categoria não essencial
+  let alvo=null,motivo='';
+  if(rp){const aum=Object.entries(atual).filter(([k])=>!ESSENCIAL.has(k)).map(([k,v])=>[k,v-(ant[k]||0)]).sort((a,b)=>b[1]-a[1])[0];
+    if(aum&&aum[1]>=50){alvo=aum[0];motivo=`<b>${esc(alvo)}</b> subiu ${brl(aum[1])} em relação ao mês anterior.`;}}
+  if(!alvo){const top=lista.find(([k])=>!ESSENCIAL.has(k));if(top){alvo=top[0];motivo=`<b>${esc(alvo)}</b> é o maior gasto do mês (${r.total?Math.round(top[1]/r.total*100):0}% das despesas).`;}}
+  if(alvo) h+=`<div class="dica">💡 ${motivo} ${DICAS[alvo]||''}</div>`;
+  el.innerHTML=h;
+}
+function graficoAno(L){
+  const el=$('#gAno'), dados=L.filter(x=>x.r);
+  if(!dados.length){el.innerHTML='<p class="help">Sem dados neste ano.</p>';return;}
+  const W=760,H=270,ml=70,mr=10,mt=14,mb=28,iw=W-ml-mr,ih=H-mt-mb;
+  const vmax=Math.max(...dados.map(x=>Math.max(x.r.ent,x.r.total)),1);
+  const passo=[1000,2000,2500,5000,10000,20000].find(p=>vmax/p<=5)||Math.ceil(vmax/5);
+  const top=Math.ceil(vmax/passo)*passo, y=v=>mt+ih-(v/top)*ih;
+  const n=12, gw=iw/n, bw=Math.min(18,(gw-10)/2);
+  const barra=(x,v,cor)=>{const yy=y(v),hh=mt+ih-yy;if(hh<1)return'';const r=Math.min(4,hh,bw/2);
+    return `<path d="M${x},${mt+ih} L${x},${yy+r} Q${x},${yy} ${x+r},${yy} L${x+bw-r},${yy} Q${x+bw},${yy} ${x+bw},${yy+r} L${x+bw},${mt+ih} Z" fill="${cor}"/>`;};
+  let g='';
+  for(let v=0;v<=top;v+=passo){g+=`<line x1="${ml}" x2="${W-mr}" y1="${y(v)}" y2="${y(v)}" stroke="#e3e6eb" stroke-width="1"/><text x="${ml-8}" y="${y(v)+4}" text-anchor="end">${v>=1000?(v/1000).toLocaleString('pt-BR')+' mil':v}</text>`;}
+  L.forEach(({m,r},i)=>{const cx=ml+gw*i+gw/2;
+    g+=`<text x="${cx}" y="${H-8}" text-anchor="middle">${MESES[m-1].slice(0,3)}</text>`;
+    if(r){g+=barra(cx-bw-1,r.ent,'var(--c-ent)')+barra(cx+1,r.total,'var(--c-desp)');
+      g+=`<rect x="${ml+gw*i}" y="${mt}" width="${gw}" height="${ih}" fill="transparent" data-m="${m}"/>`;}});
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de entradas e despesas por mês">${g}</svg><div class="tip"></div>`;
+  const tip=el.querySelector('.tip'), svg=el.querySelector('svg');
+  el.querySelectorAll('rect[data-m]').forEach(rc=>{
+    rc.onmouseenter=()=>{const m=+rc.dataset.m,r=L[m-1].r,sal=r.ent-r.total;rc.setAttribute('fill','rgba(20,50,79,.05)');
+      tip.innerHTML=`<b>${MESES[m-1]}</b><br>Entradas: ${brl(r.ent)}<br>Despesas: ${brl(r.total)}<br>${sal>=0?'Sobra':'Falta'}: <b>${brl(Math.abs(sal))}</b>`;
+      const bb=svg.getBoundingClientRect(),k=bb.width/W;
+      tip.style.left=(+rc.getAttribute('x')+gw/2)*k+'px';tip.style.top=(Math.min(y(r.ent),y(r.total))*k-6)+'px';tip.style.opacity=1;};
+    rc.onmouseleave=()=>{rc.setAttribute('fill','transparent');tip.style.opacity=0;};
+    rc.onclick=()=>{aba='mes';mes=+rc.dataset.m;render();};
+  });
+}
+function dicasAno(L){
+  const el=$('#dicasAno'), dados=L.filter(x=>x.r&&(x.r.total||x.r.ent));
+  if(!dados.length){el.innerHTML='<p class="help">Sem dados neste ano.</p>';return;}
+  const comEnt=dados.filter(x=>x.r.ent>0);
+  const tEnt=comEnt.reduce((s,x)=>s+x.r.ent,0), tDesp=dados.reduce((s,x)=>s+x.r.total,0), tDespC=comEnt.reduce((s,x)=>s+x.r.total,0);
+  const neg=comEnt.filter(x=>x.r.ent-x.r.total<0).length;
+  const g={};dados.forEach(({r})=>{const c=porCat(r);for(const k in c)g[k]=(g[k]||0)+c[k];});
+  const meses=dados.length;
+  const tops=Object.entries(g).filter(([k])=>!ESSENCIAL.has(k)).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const tendencia=k=>{const vs=dados.map(x=>porCat(x.r)[k]||0);if(vs.length<4)return'';
+    const n=Math.min(3,Math.floor(vs.length/2)),ult=vs.slice(-n).reduce((a,b)=>a+b,0)/n,antes=vs.slice(-2*n,-n).reduce((a,b)=>a+b,0)/n;
+    if(!antes)return'';const p=Math.round((ult-antes)/antes*100);
+    return Math.abs(p)<5?'<span class="eq">estável</span>':p>0?`<span class="up">▲ ${p}% nos últimos ${n} meses</span>`:`<span class="down">▼ ${-p}% nos últimos ${n} meses</span>`;};
+  let h=`<p class="resumo-geral">Em ${ano}, as despesas somaram <b>${brl(tDesp)}</b>, e nos meses com entradas lançadas elas equivalem a <b>${tEnt?Math.round(tDespC/tEnt*100):0}%</b> das entradas. `+
+    (neg?`<b class="neg">${neg} de ${comEnt.length} meses</b> fecharam com despesas maiores que as entradas.`:`Todos os ${comEnt.length} meses fecharam com sobra.`)+
+    ` Os três tipos de conta que mais pesam (fora INSS) estão abaixo, com o que dá para fazer em cada um:</p><div class="dk">`;
+  h+=tops.map(([k,v],i)=>{const media=v/meses, eco=media*0.1;
+    return `<div><h3><span>${i+1}. ${esc(k)}</span></h3><div class="meta">${brl(v)} no ano · ${tDesp?Math.round(v/tDesp*100):0}% das despesas · média ${brl(media)}/mês ${tendencia(k)?'<br>'+tendencia(k):''}</div>
+      <p>${DICAS[k]||''}</p><div class="eco">Cortando 10% → economia de <b>${brl(eco)}/mês</b> (${brl(eco*12)}/ano)</div></div>`;}).join('');
+  el.innerHTML=h+'</div>';
+}
+
 // ===== render ano =====
 function dadosAno(){return MESES.map((_,i)=>({m:i+1,r:resumo(docs[chave(ano,i+1)])}));}
 function renderAno(){
   const L=dadosAno(); const T={jason:0,david:0,outras:0,ent:0,total:0,pago:0,apagar:0,saldo:0};
   L.forEach(({r})=>{if(r)for(const k in T)T[k]+=r[k];});
+  graficoAno(L);dicasAno(L);
   setVal('#aEnt',T.ent);setVal('#aDesp',T.total);setVal('#aPago',T.pago);setVal('#aAPagar',T.apagar);setVal('#aSaldo',T.saldo,T.saldo>=0?'pos':'neg');
   let ac=0;
   $('#tAno').innerHTML=`<thead><tr><th>Mês</th><th class="n">Jason</th><th class="n">David (líq.)</th><th class="n hidem">Outras</th><th class="n">Entradas</th><th class="n">Despesas</th><th class="n hidem">A pagar</th><th class="n">Saldo</th><th class="n">Acumulado</th></tr></thead><tbody>`+
@@ -539,7 +666,7 @@ async function entrou(session){
   logado=true;$('#login').classList.add('hide');
   meuEmail=session.user.email||'';
   $('#quem').textContent=meuEmail;
-  {const h=new Date();ano=h.getFullYear();mes=h.getMonth()+1;aba='mes';}
+  [ano,mes]=mesInicial();aba='mes';
   $('#status').textContent='Carregando…';
   await carregar();tempoReal();
 }
