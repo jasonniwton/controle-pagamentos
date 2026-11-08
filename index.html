@@ -241,10 +241,13 @@ function editarMes(fn){const k=chave(ano,mes);const d=JSON.parse(JSON.stringify(
 function novoMes(){return {ano,mes,jason:'',davidBruto:'',davidDesc:20,outras:[],despesas:[]};}
 
 // ===== navegação =====
-$('#anoMenos').onclick=()=>{ano--;render();};
+const ANO_MIN=2024;
+if(ano<ANO_MIN)ano=ANO_MIN;
+$('#anoMenos').onclick=()=>{if(ano>ANO_MIN){ano--;render();}};
 $('#anoMais').onclick=()=>{ano++;render();};
 function renderMeses(){
   $('#anoLbl').textContent=ano;
+  $('#anoMenos').disabled=ano<=ANO_MIN;$('#anoMenos').style.visibility=ano<=ANO_MIN?'hidden':'visible';
   $('#meses').innerHTML=MESES.map((m,i)=>{const d=docs[chave(ano,i+1)];const r=resumo(d);
     return `<button data-m="${i+1}" class="${aba==='mes'&&mes===i+1?'on':''}">${m.slice(0,3).toUpperCase()}${r&&r.apagar>0.004?'<span class="dot" title="Há contas a pagar"></span>':''}</button>`;}).join('')
     +`<button data-m="ano" class="${aba==='ano'?'on':''}">RESUMO ${ano}</button>`;
