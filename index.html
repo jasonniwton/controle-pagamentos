@@ -112,6 +112,10 @@ tr.click{cursor:pointer}tr.click:hover td{background:#f8f9fb}
 #login{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:70;padding:16px}
 #login .box{background:#fff;border-radius:14px;padding:26px;max-width:380px;width:100%}
 #login h2{margin:0 0 4px;font-size:19px}#login p{margin:0 0 16px;color:var(--muted);font-size:13px}
+.usrs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.usrs button{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font:inherit;text-align:left}
+.usrs button:hover{border-color:#b9c2cf}
+.usrs button.on{border-color:var(--navy);background:#eef2f7;box-shadow:0 0 0 1px var(--navy) inset}
 #loginErro{color:var(--red);font-size:13px;min-height:18px;margin-top:8px}
 .sair{background:rgba(255,255,255,.12);border:0;color:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font:inherit;font-size:12px;margin-left:8px}
 .etot{font-size:18px;color:var(--green);font-variant-numeric:tabular-nums}
@@ -257,6 +261,11 @@ tr.click{cursor:pointer}tr.click:hover td{background:#f8f9fb}
 <div id="login" class="hide"><div class="box">
   <h2>Controle de Pagamentos</h2><p>David &amp; Jason — acesso restrito</p>
   <form id="fLogin">
+    <div class="f"><label>Quem está entrando?</label>
+      <div class="usrs">
+        <button type="button" data-email="jason.niwton@gmail.com"><span class="av avj">J</span><span class="nm"><b>Jason</b><small>Engenheiro civil</small></span></button>
+        <button type="button" data-email="davidgomesdasilva6@gmail.com"><span class="av avd">D</span><span class="nm"><b>David</b><small>Motorista</small></span></button>
+      </div></div>
     <div class="f"><label>E-mail</label><input type="email" id="lEmail" required autocomplete="username"></div>
     <div class="f"><label>Senha</label><input type="password" id="lSenha" required autocomplete="current-password"></div>
     <button class="btn pri" style="width:100%;margin-top:4px" id="lBtn">Entrar</button>
@@ -291,7 +300,7 @@ function inferCat(n){n=n.toUpperCase();for(const[k,v]of[['CART','Cartão de cré
 function inferResp(n){n=n.toUpperCase();return n.includes('JASON')?'Jason':n.includes('DAVID')?'David':'Casal';}
 
 // ===== quem editou =====
-const NOMES=Object.assign({'jason.niwton@gmail.com':'Jason'},(window.CONFIG||{}).NOMES||{});
+const NOMES=Object.assign({'jason.niwton@gmail.com':'Jason','davidgomesdasilva6@gmail.com':'David'},(window.CONFIG||{}).NOMES||{});
 let meuEmail='';
 const meuNome=()=>NOMES[meuEmail.toLowerCase()]||(meuEmail?'David':'');
 function carimbo(x){x.por=meuNome();x.em=new Date().toISOString();return x;}
@@ -341,6 +350,14 @@ function versiculoDoDia(h=new Date()){
   $('#versiculo').innerHTML=`<blockquote>“${esc(txt)}”</blockquote><figcaption>${esc(ref)}</figcaption>`;
 }
 versiculoDoDia();setInterval(versiculoDoDia,3600000);
+// ===== login: escolha do usuário =====
+function marcaUsuario(email){document.querySelectorAll('.usrs button').forEach(b=>b.classList.toggle('on',b.dataset.email===email));}
+document.querySelectorAll('.usrs button').forEach(b=>b.onclick=()=>{
+  $('#lEmail').value=b.dataset.email;marcaUsuario(b.dataset.email);
+  try{localStorage.setItem('ultimoUsuario',b.dataset.email);}catch{}
+  $('#lSenha').focus();});
+$('#lEmail').addEventListener('input',e=>marcaUsuario(e.target.value.trim().toLowerCase()));
+try{const u=localStorage.getItem('ultimoUsuario');if(u){$('#lEmail').value=u;marcaUsuario(u);}}catch{}
 // ===== estado =====
 let sb=null,logado=false,podeEscrever=true;
 let docs={};               // 'AAAA-MM' -> dados
@@ -725,7 +742,10 @@ render();
   const cfg=window.CONFIG||{};
   if(!window.supabase||!cfg.SUPABASE_URL||cfg.SUPABASE_URL.includes('COLE_AQUI')){
     $('#status').textContent='⚠ Configure o arquivo config.js com o endereço e a chave do Supabase.';return;}
-  sb=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_KEY);
+  // sessão guardada só nesta aba: ao fechar a aba, é preciso digitar a senha de novo
+  let armazem;try{sessionStorage.setItem('_t','1');sessionStorage.removeItem('_t');armazem=window.sessionStorage;}catch{armazem=undefined;}
+  try{Object.keys(localStorage).filter(k=>k.startsWith('sb-')&&k.endsWith('-auth-token')).forEach(k=>localStorage.removeItem(k));}catch{}
+  sb=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_KEY,{auth:{storage:armazem,persistSession:!!armazem,autoRefreshToken:true}});
   const {data:{session}}=await sb.auth.getSession();
   if(session) entrou(session); else saiu();
   sb.auth.onAuthStateChange((ev,ses)=>{if(ev==='SIGNED_OUT')saiu();});
@@ -734,6 +754,8 @@ render();
     const {data,error}=await sb.auth.signInWithPassword({email:$('#lEmail').value.trim(),password:$('#lSenha').value});
     $('#lBtn').disabled=false;
     if(error){$('#loginErro').textContent='E-mail ou senha incorretos.';return;}
+    try{localStorage.setItem('ultimoUsuario',$('#lEmail').value.trim().toLowerCase());}catch{}
+    $('#lSenha').value='';
     entrou(data.session);
   };
   $('#btnSair').onclick=()=>sb.auth.signOut();
