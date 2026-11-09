@@ -745,6 +745,10 @@ render();
   // sessão guardada só nesta aba: ao fechar a aba, é preciso digitar a senha de novo
   let armazem;try{sessionStorage.setItem('_t','1');sessionStorage.removeItem('_t');armazem=window.sessionStorage;}catch{armazem=undefined;}
   try{Object.keys(localStorage).filter(k=>k.startsWith('sb-')&&k.endsWith('-auth-token')).forEach(k=>localStorage.removeItem(k));}catch{}
+  // só mantém o login quando a página é apenas recarregada (F5); ao abrir o site de novo
+  // (nova aba, aba restaurada, link ou favorito), pede a senha outra vez
+  try{const nav=performance.getEntriesByType('navigation')[0];const tipo=nav?nav.type:'navigate';
+    if(tipo!=='reload'&&armazem)Object.keys(armazem).filter(k=>k.startsWith('sb-')).forEach(k=>armazem.removeItem(k));}catch{}
   sb=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_KEY,{auth:{storage:armazem,persistSession:!!armazem,autoRefreshToken:true}});
   const {data:{session}}=await sb.auth.getSession();
   if(session) entrou(session); else saiu();
